@@ -1,139 +1,133 @@
-setwd("~/Cushings")
+setwd(dir = "~")
 
-#package
+#packages
 library(readr)
 library(readxl)
-library(missForest)
-library(doParallel)
-library(factoextra) #pca
-library(tibble)
-library(limma)
-library(ggplot2)
-library(VennDiagram)
-library("RColorBrewer")
-library(ComplexHeatmap)
-library(IMIFA)
 library(dplyr)
 library(tidyverse)
-library(ggrepel)
-library(matrixStats)
+library(tibble) 
+library(matrixStats) #rowSds
+library(ggplot2)
+library(ggrepel) #label in ggplot figures
+library(ggpubr)
 
-#load data
-metadata <- read_excel("Horse_Metadata.xlsx")
-Combined_with_Proteins <- read_csv("Combined_with_Proteins.csv")
-prot_insolution_comblibrary <- read.csv("InSolution_Combined_Library.csv")
-Total_Proteins_BarChart <- read_excel("Total_Proteins_BarChart.xlsx")
+library(missForest) #random forest imputation
+library(doParallel) #parallel computing in random forest
+library(IMIFA) #pareto scaling
+library(factoextra) #pca
 
+library(limma) #limma for differential expression analysis
+library(gprofiler2) #go term analysis
+library(randomForest) #random forest classifier
+library(caret) #machine learning 
+library(MLmetrics) #machine learning 
+
+library(VennDiagram) #venn diagram
+library("RColorBrewer")
+library(ComplexHeatmap) #heatmap
+library(circlize) #colorRamp2 palette
+library(pROC) #ROC
+
+library(mpwR)
+library(vctrs)
+library(fmsb)
+library(gridExtra)
+
+library(DT)
+
+
+
+#data import
+#proteomics
+prot <- read.csv("InSolution_Combined_Library.csv")
+#metabolomics
+met <- read.csv("data/Metabolites.csv")
+#lipidomics
+lipo <- read.csv("data/Lipids.csv")
+#meta data
+metadata <- read.csv("data/Metadata.csv")
 #rename metadata
 metadata$Status[metadata$Status == "Cushings"] <- "PPID"
 
+#remove first row
+prot <- as.data.frame(prot[-1,])
+met <- as.data.frame(met[-1,])
+lipo <- as.data.frame(lipo[-1,])
 
-#proteomics data reshape
-prot_insolution_comblibrary <- as.data.frame(prot_insolution_comblibrary[-1,])
-prot_insolution_comblibrary[,-1] <- sapply(prot_insolution_comblibrary[,-1], as.numeric)
-rownames(prot_insolution_comblibrary) <- prot_insolution_comblibrary[,1]
-prot_insolution_comblibrary <-  prot_insolution_comblibrary[,-1]
+#store first column
+feature_prot <- prot[,1]
+feature_met <- met[,1]
+feature_lipo <- lipo[,1]
 
-#lipidomics and metabolomics data
-lipo <- Combined_with_Proteins[875:2493,]
-met <- Combined_with_Proteins[2494:6400,]
+#convert columns from character to numeric
+prot <- as.data.frame(sapply(prot[,-1], as.numeric))
+met <- as.data.frame(sapply(met[,-1], as.numeric))
+lipo <- as.data.frame(sapply(lipo[,-1], as.numeric))
 
-#log2 transform
-prot_insolution_comblibrary <- log2(prot_insolution_comblibrary)
+#feature as row names
+rownames(prot) <- feature_prot
+rownames(met) <- feature_met
+rownames(lipo) <- feature_lipo
+
+#colnames Cushings -> PPID
+colnames(prot) <- gsub("Cushings", "PPID", colnames(prot))
+colnames(met) <- gsub("Cushings", "PPID", colnames(met))
+colnames(lipo) <- gsub("Cushings", "PPID", colnames(lipo))
+
+
+
+#log2 transformation
+prot <- log2(prot)
 met <- log2(met)
 lipo <- log2(lipo)
 
-#replace INF by 0
+#convert -Inf to 0
 met[met == -Inf] <- 0
 lipo[lipo == -Inf] <- 0
 
-#find features with at least 3 non-NA in proteomics
-prot_insolution_comblibrary <- prot_insolution_comblibrary[which(rowSums(is.na(prot_insolution_comblibrary)) <= ncol(prot_insolution_comblibrary)-3),]
+#find features with at least 3 non-NA
+prot <- prot[which(rowSums(is.na(prot)) <= ncol(prot)-3),]
 
-
-#imputation
-#proteomics
-#random forest imputation by group
+#proteomics random forest imputation by group
 registerDoParallel(cores = 6)
-prot_insolution_comblibrary_rf_c <- missForest(prot_insolution_comblibrary[,1:8], maxiter = 10, ntree = 100, parallelize = "variable", verbose = TRUE)
-prot_insolution_comblibrary_rf_t <- missForest(prot_insolution_comblibrary[,9:15], maxiter = 10, ntree = 100, parallelize = "variable", verbose = TRUE)
-prot_insolution_comblibrary_rf_c <- prot_insolution_comblibrary_rf_c$ximp
-prot_insolution_comblibrary_rf_t <- prot_insolution_comblibrary_rf_t$ximp
-prot_insolution_comblibrary_rf_ct <- cbind(prot_insolution_comblibrary_rf_c, prot_insolution_comblibrary_rf_t)
-write.csv(prot_insolution_comblibrary_rf_ct, "cushings_proteomics_comblibrary_imputed.csv")
+prot_rf_c <- missForest(prot[,1:8], maxiter = 10, ntree = 100, parallelize = "variable", verbose = TRUE)
+prot_rf_t <- missForest(prot[,9:15], maxiter = 10, ntree = 100, parallelize = "variable", verbose = TRUE)
+prot_rf_c <- prot_rf_c$ximp
+prot_rf_t <- prot_rf_t$ximp
+prot_rf_ct <- cbind(prot_rf_c, prot_rf_t)
 
-#metabolomics lipidomomics imputation
-#impute 
+#metabolomics lipidomics imputation by 1/5 of the minimal value per feature
 for (i in 1:nrow(met)) {
   if (length(which(met[i,] <= 0)) > 0) {
-    print(paste(i, rownames(met)[i], colnames(met)[which(met[i,] <= 0)], min(met[i, which(met[i,] > 0)])/5, sep = " "))
+    print(paste(i, rownames(met)[i], colnames(met)[which(met[i,] <= 0)], #which sample is missing
+                min(met[i, which(met[i,] > 0)])/5, sep = " ")) #what is the min of the feature
     met[i, met[i,] <= 0] <- min(met[i, which(met[i,] > 0)])/5
   } else {
     next
   }
 }
 
+#lipidomics
 for (i in 1:nrow(lipo)) {
   if (length(which(lipo[i,] <= 0)) > 0) {
-    print(paste(i, rownames(lipo)[i], colnames(lipo)[which(lipo[i,] <= 0)], min(lipo[i, which(lipo[i,] > 0)])/5, sep = " "))
+    print(paste(i, rownames(lipo)[i], colnames(lipo)[which(lipo[i,] <= 0)], #which sample is missing
+                min(lipo[i, which(lipo[i,] > 0)])/5, sep = " ")) #what is the min of the feature
     lipo[i, lipo[i,] <= 0] <- min(lipo[i, which(lipo[i,] > 0)])/5
   } else {
     next
   }
 }
 
+met_pre <- met
+lipo_pre <- lipo
+
 #pareto scaling
-met <- pareto_scale(met)
-lipo <- pareto_scale(lipo)
-
-write.csv(met, "cushings_metabolomics_imputed.csv")
-write.csv(lipo, "cushings_lipodomics_imputed.csv")
+met <- as.data.frame(pareto_scale(met))
+lipo <- as.data.frame(pareto_scale(lipo))
 
 
-#pca
-#proteomics
-PCA_insolution_comblibrary_rf <- prcomp(t(prot_insolution_comblibrary_rf_ct))
-fviz_pca_ind(PCA_insolution_comblibrary_rf,
-             geom = "point", #"point" or "text"
-             habillage = metadata$Status,
-             repel = TRUE,
-             addEllipses = TRUE,
-             ellipse.level = 0.95,
-             palette  = c("Control" = "orange","PPID" = "purple")) +
-  labs(title = "Proteomics") +
-  theme(plot.title = element_text(size = 25, hjust = 0.5),
-        axis.title = element_text(size = 15))
-ggsave("pca_prot_final.svg",
-       plot = last_plot(),
-       path = "figures/",
-       device = "svg",
-       width = 1500,
-       height = 1500,
-       units = "px",
-       dpi = 300)
-
-#metabolomics
-PCA_met <- prcomp(t(met))
-fviz_pca_ind(PCA_met,
-             geom = "point", #"point" or "text"
-             habillage = metadata$Status,
-             #repel = TRUE,
-             addEllipses = TRUE,
-             ellipse.level = 0.95,
-             palette  = c("Control" = "orange","PPID" = "purple")) +
-  labs(title = "Metabolomics") +
-  theme(plot.title = element_text(size = 25, hjust = 0.5),
-        axis.title = element_text(size = 15))
-ggsave("pca_met_final.svg",
-       plot = last_plot(),
-       path = "figures/",
-       device = "svg",
-       width = 1500,
-       height = 1500,
-       units = "px",
-       dpi = 300)
-
-#lipodomics
+#Figure 2 PCA + heatmap
+#a ipodomics pca
 PCA_lipo <- prcomp(t(lipo))
 fviz_pca_ind(PCA_lipo,
              geom = "point", #"point" or "text"
@@ -154,8 +148,51 @@ ggsave("pca_lipo_final.svg",
        units = "px",
        dpi = 300)
 
-#combined omics
-sum <- rbind(prot_insolution_comblibrary_rf_ct, met, lipo)
+#b metabolomics pca
+PCA_met <- prcomp(t(met))
+fviz_pca_ind(PCA_met,
+             geom = "point", #"point" or "text"
+             habillage = metadata$Status,
+             #repel = TRUE,
+             addEllipses = TRUE,
+             ellipse.level = 0.95,
+             palette  = c("Control" = "orange","PPID" = "purple")) +
+  labs(title = "Metabolomics") +
+  theme(plot.title = element_text(size = 25, hjust = 0.5),
+        axis.title = element_text(size = 15))
+ggsave("pca_met_final.svg",
+       plot = last_plot(),
+       path = "figures/",
+       device = "svg",
+       width = 1500,
+       height = 1500,
+       units = "px",
+       dpi = 300)
+
+# c proteomics pca
+PCA_prot <- prcomp(t(prot_rf_ct))
+fviz_pca_ind(PCA_prot,
+             geom = "point", #"point" or "text"
+             habillage = metadata$Status,
+             repel = TRUE,
+             addEllipses = TRUE,
+             ellipse.level = 0.95,
+             palette  = c("Control" = "orange","PPID" = "purple")) +
+  labs(title = "Proteomics") +
+  theme(plot.title = element_text(size = 25, hjust = 0.5),
+        axis.title = element_text(size = 15))
+ggsave("pca_prot_final.svg",
+       plot = last_plot(),
+       path = "figures/",
+       device = "svg",
+       width = 1500,
+       height = 1500,
+       units = "px",
+       dpi = 300)
+
+#d combined omics pca
+sum <- rbind(prot_rf_ct, met, lipo)
+write.csv(sum, "multiomics_data.csv")
 PCA_sum <- prcomp(t(sum))
 fviz_pca_ind(PCA_sum,
              geom = "point", #"point" or "text"
@@ -175,54 +212,47 @@ ggsave("pca_combine_final.svg",
        height = 1500,
        units = "px",
        dpi = 300)
-write.csv(sum, "multiomics_data.csv")
 
-
+#e combined omics heatmap 
 #differential expression analysis
-#limma
+#limma design matrix
 design <- model.matrix(~ 0 + Status + Sex + Age + Batch, data = metadata)
 #proteomics
-fit.prot_insolution_comblibrary <- lmFit(prot_insolution_comblibrary_rf_ct, design)
-con.prot_insolution_comblibrary <- makeContrasts(StatusCushings - StatusControl, levels = design)
-fit.con.prot_insolution_comblibrary <- contrasts.fit(fit.prot_insolution_comblibrary, con.prot_insolution_comblibrary)
-bayes.prot_insolution_comblibrary <- eBayes(fit.con.prot_insolution_comblibrary)
-result.prot_insolution_comblibrary <- topTable(bayes.prot_insolution_comblibrary, sort.by="none", n=Inf, adjust = "fdr")
-sig.prot_insolution_comblibrary <- result.prot_insolution_comblibrary[result.prot_insolution_comblibrary$adj.P.Val < 0.05 & abs(result.prot_insolution_comblibrary$logFC) > 1,]
-write.csv(result.prot_insolution_comblibrary, "result_prot_insolution_comblibrary.csv")
-write.csv(sig.prot_insolution_comblibrary, "sig_prot_insolution_comblibrary.csv")
+fit.prot <- lmFit(prot_rf_ct, design)
+con.prot <- makeContrasts(StatusPPID - StatusControl, levels = design)
+fit.con.prot <- contrasts.fit(fit.prot, con.prot)
+bayes.prot <- eBayes(fit.con.prot)
+result.prot <- topTable(bayes.prot, sort.by="none", n=Inf, adjust = "fdr")
+sig.prot <- result.prot[result.prot$adj.P.Val < 0.05 & abs(result.prot$logFC) > 1,]
+write.csv(sig.prot, "sig_prot_insolution_comblibrary.csv")
 
 #metabolomics
 fit.met <- lmFit(met, design)
-con.met <- makeContrasts(StatusCushings - StatusControl, levels = design)
+con.met <- makeContrasts(StatusPPID - StatusControl, levels = design)
 fit.con.met <- contrasts.fit(fit.met, con.met)
 bayes.met <- eBayes(fit.con.met)
 result.met <- topTable(bayes.met, sort.by="none", n=Inf, adjust = "fdr")
 sig.met <- result.met[result.met$adj.P.Val < 0.05 & abs(result.met$logFC) > 1,]
-write.csv(result.met, "result_metabolomics.csv")
 write.csv(sig.met, "sig_metabolomics.csv")
 
 #lipo
 fit.lipo <- lmFit(lipo, design)
-con.lipo <- makeContrasts(StatusCushings - StatusControl, levels = design)
+con.lipo <- makeContrasts(StatusPPID - StatusControl, levels = design)
 fit.con.lipo <- contrasts.fit(fit.lipo, con.lipo)
 bayes.lipo <- eBayes(fit.con.lipo)
 result.lipo <- topTable(bayes.lipo, sort.by="none", n=Inf, adjust = "fdr")
 sig.lipo <- result.lipo[result.lipo$adj.P.Val < 0.05 & abs(result.lipo$logFC) > 1,]
-write.csv(result.lipo, "result_lipodomics.csv")
 write.csv(sig.lipo, "sig_lipodomics.csv")
 
 #combined
 fit.sum <- lmFit(sum, design)
-con.sum <- makeContrasts(StatusCushings - StatusControl, levels = design)
+con.sum <- makeContrasts(StatusPPID - StatusControl, levels = design)
 fit.con.sum <- contrasts.fit(fit.sum, con.sum)
 bayes.sum <- eBayes(fit.con.sum)
 result.sum <- topTable(bayes.sum, sort.by="none", n=Inf, adjust = "fdr")
 sig.sum <- result.sum[result.sum$adj.P.Val < 0.05 & abs(result.sum$logFC) > 1,]
-write.csv(result.lipo, "result_combined.csv")
 write.csv(sig.sum, "sig_combined.csv")
 
-
-#heatmap
 # Define colors for each levels of qualitative variables
 col = list(Condition = c("Control" = "orange","PPID" = "purple"),
            Batch = c("1" = "#8CD3C7", "2" = "#FDFEB3", "3" = "#BEBADA"),
@@ -240,9 +270,9 @@ top_prot_ttest <- c("HSD17B4", "PHB2","CCT7","RPS16","DDR1",
                     "COMT","IL6ST","NPEPPS","TBCB","HSPA4",
                     "CDON","CTSA","ARPC5","COMP","MRC2")
 #get limma regressed data
-prot_limma_all <- fitted(fit.prot_insolution_comblibrary)
+prot_limma_all <- fitted(fit.prot)
 prot_limma_ttest <- as.data.frame(prot_limma_all[rownames(prot_limma_all) %in% top_prot_ttest,])
-colnames(prot_limma_ttest) <- colnames(met_limma)
+colnames(prot_limma_ttest) <- colnames(prot)
 
 prot_limma_ttest$feature <- rownames(prot_limma_ttest)
 prot_limma_ttest <- prot_limma_ttest %>% 
@@ -279,7 +309,7 @@ top_met_ttest <- c("5.16_173.0599m/z", "1.23_858.1001m/z", "1.29_311.9875m/z","1
 #get limma regressed data
 met_limma_all <- fitted(fit.met)
 met_limma_ttest <- as.data.frame(met_limma_all[rownames(met_limma_all) %in% top_met_ttest,])
-colnames(met_limma_ttest) <- colnames(met_limma)
+colnames(met_limma_ttest) <- colnames(met)
 
 met_limma_ttest$feature <- rownames(met_limma_ttest)
 met_limma_ttest <- met_limma_ttest %>% 
@@ -315,7 +345,7 @@ top_lipo_ttest <- c("11.845_673.5946","11.833_669.6359","TG O-30:0","11.831_770.
 #get limma regressed data
 lipo_limma_all <- fitted(fit.lipo)
 lipo_limma_ttest <- as.data.frame(lipo_limma_all[rownames(lipo_limma_all) %in% top_lipo_ttest,])
-colnames(lipo_limma_ttest) <- colnames(met_limma)
+colnames(lipo_limma_ttest) <- colnames(lipo)
 
 lipo_limma_ttest$feature <- rownames(lipo_limma_ttest)
 lipo_limma_ttest <- lipo_limma_ttest %>% 
@@ -342,7 +372,7 @@ Heatmap(lipo_limma_ttest,
         cluster_columns = FALSE)
 dev.off()
 
-
+#Figure S1
 #volcano plot
 #limma result of omics combined analysis
 result.sum$category <- NA
@@ -369,7 +399,7 @@ ggsave("volcano_sum.svg",
        units = "px",
        dpi = 300)
 
-
+#Figure S3
 #lipid class 
 lipo_class <- data.frame(lipid = rownames(lipo)[4:625],
                          class = NA,
@@ -387,60 +417,9 @@ for (i in 1:length(lipo_class$lipid)) {
                                      str_locate(lipo_class$lipid[i], ":")[1]+1)
 }
 #combine lipid class with lipodomics abundance
-lipo_class <- cbind(lipo_class, lipo[4:625,])
+lipo_class <- cbind(lipo_class, lipo_pre[4:625,])
 
-#length effect
-lipo_length_sum <- data.frame(length = unique(lipo_class$length),
-                              mean_cont = NA,
-                              mean_trea = NA,
-                              se_cont = NA,
-                              se_trea = NA)
-
-#get average intensity for features in each length by conditions
-for (i in 1:length(lipo_length_sum$length)) {
-  if (nrow(lipo_class[lipo_class$length == lipo_length_sum$length[i],]) == 1) {
-    lipo_length_sum$mean_cont[i] <- mean(colMeans(lipo_class[lipo_class$length == lipo_length_sum$length[i],5:12]))
-    lipo_length_sum$mean_trea[i] <- mean(colMeans(lipo_class[lipo_class$length == lipo_length_sum$length[i],13:19]))
-    lipo_length_sum$se_cont[i] <- 0
-    lipo_length_sum$se_trea[i] <- 0
-  } else if (nrow(lipo_class[lipo_class$length == lipo_length_sum$length[i],]) > 1) {
-    lipo_length_sum$mean_cont[i] <- mean(colMeans(lipo_class[lipo_class$length == lipo_length_sum$length[i],5:12]))
-    lipo_length_sum$mean_trea[i] <- mean(colMeans(lipo_class[lipo_class$length == lipo_length_sum$length[i],13:19]))
-    lipo_length_sum$se_cont[i] <- sd(colMeans(lipo_class[lipo_class$length == lipo_length_sum$length[i],5:12]))/sqrt(7)
-    lipo_length_sum$se_trea[i] <- sd(colMeans(lipo_class[lipo_class$length == lipo_length_sum$length[i],5:12]))/sqrt(6)
-  }
-}
-
-lipo_length_sum <- lipo_length_sum %>%
-  pivot_longer(cols = 2:5,
-               names_to = c(".value", "condition"),
-               names_pattern = "(.*)_(cont|trea)") 
-#barplot
-ggplot(data = lipo_length_sum, aes(x = length, y = mean, fill = condition)) +
-  geom_bar(stat = "identity", position = position_dodge()) +
-  geom_errorbar(aes(ymin = mean-1.96*se, ymax = mean+1.96*se), width=.2,
-                position=position_dodge(.9)) +
-  scale_fill_manual(values = c("cont" = "orange", "trea" = "purple"),
-                    labels = c("cont" = "Control", "trea" = "PPID")) +
-  labs(x = "Lipid Chain Length",
-       y = bquote(paste("Mean log"["2"]*"Intensity")),
-       fill = "Condition") +
-  theme_bw() +
-  theme(axis.text.x = element_text(size = 10),
-        axis.text.y = element_text(size = 10),
-        axis.title = element_text(size = 12),
-        legend.text = element_text(size = 10),
-        legend.title = element_text(size = 12))
-ggsave("barplot_lipidlength_intensity.svg",
-       plot = last_plot(),
-       path = "figures/",
-       device = "svg",
-       width = 3300,
-       height = 1496,
-       units = "px",
-       dpi = 300)
-
-#saturation effect
+#Figure S3a saturation effect
 lipo_saturation_sum <- data.frame(saturation = unique(lipo_class$saturation),
                                   mean_cont = NA,
                                   mean_trea = NA,
@@ -492,3 +471,66 @@ ggsave("barplot_lipidsaturation_intensity.svg",
        height = 1496,
        units = "px",
        dpi = 300)
+
+#Figure S3b length effect
+lipo_length_sum <- data.frame(length = unique(lipo_class$length),
+                              mean_cont = NA,
+                              mean_trea = NA,
+                              se_cont = NA,
+                              se_trea = NA)
+
+#get average intensity for features in each length by conditions
+for (i in 1:length(lipo_length_sum$length)) {
+  if (nrow(lipo_class[lipo_class$length == lipo_length_sum$length[i],]) == 1) {
+    lipo_length_sum$mean_cont[i] <- mean(colMeans(lipo_class[lipo_class$length == lipo_length_sum$length[i],5:12]))
+    lipo_length_sum$mean_trea[i] <- mean(colMeans(lipo_class[lipo_class$length == lipo_length_sum$length[i],13:19]))
+    lipo_length_sum$se_cont[i] <- 0
+    lipo_length_sum$se_trea[i] <- 0
+  } else if (nrow(lipo_class[lipo_class$length == lipo_length_sum$length[i],]) > 1) {
+    lipo_length_sum$mean_cont[i] <- mean(colMeans(lipo_class[lipo_class$length == lipo_length_sum$length[i],5:12]))
+    lipo_length_sum$mean_trea[i] <- mean(colMeans(lipo_class[lipo_class$length == lipo_length_sum$length[i],13:19]))
+    lipo_length_sum$se_cont[i] <- sd(colMeans(lipo_class[lipo_class$length == lipo_length_sum$length[i],5:12]))/sqrt(7)
+    lipo_length_sum$se_trea[i] <- sd(colMeans(lipo_class[lipo_class$length == lipo_length_sum$length[i],5:12]))/sqrt(6)
+  }
+}
+
+lipo_length_sum <- lipo_length_sum %>%
+  pivot_longer(cols = 2:5,
+               names_to = c(".value", "condition"),
+               names_pattern = "(.*)_(cont|trea)") 
+#barplot
+ggplot(data = lipo_length_sum, aes(x = length, y = mean, fill = condition)) +
+  geom_bar(stat = "identity", position = position_dodge()) +
+  geom_errorbar(aes(ymin = mean-1.96*se, ymax = mean+1.96*se), width=.2,
+                position=position_dodge(.9)) +
+  scale_fill_manual(values = c("cont" = "orange", "trea" = "purple"),
+                    labels = c("cont" = "Control", "trea" = "PPID")) +
+  labs(x = "Lipid Chain Length",
+       y = bquote(paste("Mean log"["2"]*"Intensity")),
+       fill = "Condition") +
+  theme_bw() +
+  theme(axis.text.x = element_text(size = 10),
+        axis.text.y = element_text(size = 10),
+        axis.title = element_text(size = 12),
+        legend.text = element_text(size = 10),
+        legend.title = element_text(size = 12))
+ggsave("barplot_lipidlength_intensity.svg",
+       plot = last_plot(),
+       path = "figures/",
+       device = "svg",
+       width = 3300,
+       height = 1496,
+       units = "px",
+       dpi = 300)
+
+
+
+
+
+
+
+
+
+
+
+
