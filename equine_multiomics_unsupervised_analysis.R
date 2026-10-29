@@ -1,18 +1,31 @@
-# Equine multi-omics: plot archived unsupervised results from RData.  No model fitting, statistical
-# tests, imputation, PCA recalculation or cross-validation.  Usage: Rscript
+# Equine multi-omics: plot archived unsupervised results from RData.
+# Usage: Rscript
 # equine_multiomics_unsupervised_analysis.R [all|figure3|figure4|figure5|supplement]
 # [output_directory]
 options(stringsAsFactors = FALSE)
 args <- commandArgs(trailingOnly = TRUE)
 if (length(args) && args[1] %in% c("-h", "--help")) {
-  cat("Usage: Rscript equine_multiomics_unsupervised_analysis.R [all|figure3|figure4|figure5|supplement] [output_directory]\n")
+  cat("Usage: Rscript equine_multiomics_unsupervised_analysis.R [all|figure3|figure4|figure5|supplement|--check] [output_directory]\n")
   quit(status = 0)
 }
 target <- if (length(args)) args[1] else "all"
-if (!target %in% c("all", "figure3", "figure4", "figure5", "supplement")) {
+if (!target %in% c("all", "figure3", "figure4", "figure5", "supplement", "--check")) {
   stop("Unknown figure: ", target, ". Use --help for available commands.")
 }
-packages <- c("ggplot2", "tidytext", "patchwork", "pheatmap", "scico", "svglite", "ragg")
+file_arg <- grep("^--file=", commandArgs(), value = TRUE)
+root <- if (length(file_arg)) dirname(normalizePath(sub("^--file=", "", file_arg[1]))) else getwd()
+saved <- new.env(parent = emptyenv())
+loaded <- load(file.path(root, "data", "unsupervised", "plot_data.RData"), envir = saved)
+if (!identical(loaded, "plot_data")) stop("Expected exactly one archived object named plot_data.")
+b <- saved$plot_data
+source(file.path(root, "scripts", "validate_unsupervised_data.R"), local = TRUE)
+validate_unsupervised_data(b)
+if (target == "--check") {
+  cat("PASS: archived figure-input structure, sample alignment and stored AUC summaries.\n")
+  cat("Checked: saved-data schema, heatmap/PCA sample identities, significance labels and mean +/- SD bounds.\n")
+  quit(status = 0)
+}
+packages <- c("ggplot2", "tidytext", "patchwork", "pheatmap", "scico", "svglite", "ragg", "scales")
 missing <- packages[!vapply(packages, requireNamespace, logical(1), quietly = TRUE)]
 if (length(missing)) stop("Install these R packages first: ", paste(missing, collapse = ", "))
 suppressPackageStartupMessages({
@@ -25,13 +38,7 @@ suppressPackageStartupMessages({
   library(svglite)
   library(ragg)
 })
-file_arg <- grep("^--file=", commandArgs(), value = TRUE)
-root <- if (length(file_arg)) dirname(normalizePath(sub("^--file=", "", file_arg[1]))) else getwd()
 output_root <- if (length(args) > 1L) args[2] else file.path(root, "outputs", "unsupervised")
-saved <- new.env(parent = emptyenv())
-load(file.path(root, "data", "unsupervised", "plot_data.RData"), envir = saved)
-b <- saved$plot_data
-stopifnot(identical(b$schema_version, 1L))
 for (d in c("figures", "panels", "supplement")) {
   dir.create(file.path(output_root, d), showWarnings = FALSE, recursive = TRUE)
 }

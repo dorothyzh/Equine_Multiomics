@@ -31,10 +31,10 @@ f8c4f1a818f238c3bffcebb6ba736ea1e110239884ac2f01df1e61cfbea54ddb
 | `loading_top12` | 108 × 4 | `feature`, `factor`, signed loading `value`, `view`; fixed top 12 absolute loadings for each of 3 omics × 3 factors | Figure 3c, including separate factor displays |
 | `rf_importance` | Named list of 3 tables | `proteomics`: 54 rows; `lipidomics`: 44; `metabolomics`: 4. Eight columns: `Control`, `Cushings`, `MeanDecreaseAccuracy`, `MeanDecreaseGini`, `Feature`, `Factor`, `Group`, `Omics` | Figure 4a–c |
 | `auc_summary` | 4 × 5 | `Factor`, `Mean_AUC`, `SD_AUC`, `Upper`, `Lower` | Figure 4d |
-| `auc_cv_results` | 4 named vectors, 10 values each | Saved AUC values for Factor1, Factor2, Factor3 and Combined; retained as provenance, not used to recalculate Figure 4d | Reference only |
+| `auc_cv_results` | 4 named vectors, 10 values each | Saved AUC values for Factor1, Factor2, Factor3 and Combined; archived validation values | Reference only |
 | `pca_data` | 30 × 8 | Saved `PC1`, `PC2`, `sample`, `Status`, `Sex`, `Age`, `Batch`, `Type`; 15 horses before and the same 15 after adjustment | Figure 4e–f |
 | `adjusted_matrix` | 102 × 15 numeric matrix | Saved adjusted heatmap values, with feature and sample IDs | Figure 5 |
-| `raw_matrix` | 102 × 15 numeric matrix | Saved, already scaled heatmap values before adjustment; this is not raw instrument data | Raw heatmap companion |
+| `raw_matrix` | 102 × 15 numeric matrix | Saved, scaled heatmap values before adjustment | Raw heatmap companion |
 | `annotation_row` | 102 × 3 | `Polarity`, `Factor`, `Omics`; row names match matrix feature IDs | Both heatmaps |
 | `annotation_col` | 15 × 3 | `Sex`, `Age`, `Batch`; row names match matrix sample IDs | Both heatmaps |
 | `model_variance` | 108 × 4 | `Model`, `Factor`, `Omics`, `AverageVariance` | Archived variance heatmap |
@@ -42,13 +42,13 @@ f8c4f1a818f238c3bffcebb6ba736ea1e110239884ac2f01df1e61cfbea54ddb
 | `model_scores` | 8 × 5 | `Model`, `TotalVariance`, `VarianceSD`, `NumRedundant`, `Score` from the saved score plot | Archived model-score bars |
 | `model_total_variance` | 16 × 4 | `Model`, `Condition`, `Omics`, `TotalVariance`; the archived `Omics` column is missing (`NA`) throughout | Archived total-variance bars |
 
-The heatmap has 102 rows and 15 columns, representing eight control horses and seven horses with PPID. PEF1 appears in two factor groups, stored as `PEF1` and `PEF1.1`; both rows have identical values and are displayed as PEF1. There are 101 distinct display names. `Polarity` denotes loading direction, not ionization mode.
+The heatmap has 102 rows and 15 columns, representing eight control horses and seven horses with PPID. PEF1 appears in two factor groups, stored as `PEF1` and `PEF1.1`; both rows have identical values and are displayed as PEF1. There are 101 distinct display names. `Polarity` denotes loading direction.
 
 Matrix values, row order and sample order are preserved. The script sets `cluster_rows = FALSE`, `cluster_cols = FALSE` and leaves `scale = "none"` in `pheatmap`. The adjusted matrix is already standardized by row.
 
-Figure 4d uses the stored summary columns exactly. `Lower = max(Mean_AUC - SD_AUC, 0)` and `Upper = min(Mean_AUC + SD_AUC, 1)`. These are clipped SD bounds, not 95% confidence intervals. Mean values in Factor1, Factor2, Factor3, Combined order are 0.675, 0.83125, 0.8625, 0.896875. The plotting script neither pools nor recomputes the ten stored AUC values.
+Figure 4d uses the stored summary columns exactly. `Lower = max(Mean_AUC - SD_AUC, 0)` and `Upper = min(Mean_AUC + SD_AUC, 1)`. These are clipped SD bounds. Mean values in Factor1, Factor2, Factor3, Combined order are 0.675, 0.83125, 0.8625, 0.896875.
 
-The model-comparison plot tables are separate archived display objects. In particular, the redundancy counts in `model_redundancy` and `model_scores` are not interchangeable and are not recalculated here. Missing omics labels in `model_total_variance` are retained; its plot uses only the existing model and condition fields.
+The model-comparison tables store their respective plotted values. `model_total_variance` contains `NA` omics labels and is plotted by model and condition.
 
 ## Provenance and extraction
 
@@ -70,9 +70,9 @@ The extraction was prepared on 2026-10-28 from the following existing project re
 | `loading_top12` | Archived loading values from full-feature `0120/model.hdf5`; the existing top-12 absolute-loading display rule was applied once during extraction, separately for each view/factor |
 | `rf_importance` | Existing `0211/<omics>/importance_top_factor*_<positive-or-negative>.csv` files; the existing top-10 importance display rule was applied once per factor/polarity, retaining ties |
 
-The original `adjust_heatmap.RData` archive has MD5 `fe58f0084a535a0d7f86f94fb36511a3`. Only the listed plotting data were extracted. Values were not refitted or rescaled, and the original workspace and HDF5 files are not needed to draw the figures.
+The original `adjust_heatmap.RData` archive has MD5 `fe58f0084a535a0d7f86f94fb36511a3`. The listed plotting data were extracted with their stored numerical values.
 
-Figure 3 traces to the full-feature model (834 proteins, 3,906 metabolomic features and 1,619 lipidomic features). The saved RF selection traces to a reduced-feature model (834 proteins, 115 metabolomic features and 625 lipidomic features). Both archived MOFA models have 45 modality-specific IDs for 15 horses, without shared observed IDs across views. The compact plotting data preserve the historical outputs; they do not repair this sample-pairing issue or reconcile the two model lineages. See the [notes in the main README](../../README.md#notes-on-the-archived-results).
+Figure 3 traces to the full-feature model (834 proteins, 3,906 metabolomic features and 1,619 lipidomic features). The saved RF selection traces to a reduced-feature model (834 proteins, 115 metabolomic features and 625 lipidomic features). Both archived MOFA models have 45 modality-specific IDs for 15 horses, without shared observed IDs across views. The compact plotting data retain the outputs and factor labels from each model lineage.
 
 ## Output files
 
@@ -101,3 +101,7 @@ The main script is [`equine_multiomics_unsupervised_analysis.R`](../../equine_mu
 | `supplement` | `supplement/Supplement_total_variance_plot` | Archived total variance |
 
 Generated PDFs, SVGs, PNGs and `sessionInfo.txt` are local outputs and are ignored by the supplied `outputs/unsupervised/.gitignore`. The data are covered by the repository's existing [CC BY 4.0 data license](../LICENSE).
+
+## Validation and CSV export
+
+Run the main entry point with `--check` to check the schema, heatmap/PCA sample identities, association labels, stored AUC vectors and clipped SD bounds. Run `Rscript --vanilla scripts/export_unsupervised_tables.R` from the repository root to export 17 CSV tables. Matrix and annotation CSV files include explicit source feature or sample ID columns. AUC values include their factor and stored-run index. The RData file is preserved during validation and export.

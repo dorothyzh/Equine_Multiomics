@@ -1,0 +1,107 @@
+{
+  "version": "1.0.0",
+  "date": "2026-10-28",
+  "plot_sets": 19,
+  "pdf_files": 19,
+  "svg_files": 19,
+  "png_files": 19,
+  "csv_tables": 17,
+  "source_data_sha256": "f8c4f1a818f238c3bffcebb6ba736ea1e110239884ac2f01df1e61cfbea54ddb",
+  "rendered_pngs": [
+    {
+      "file": "figures/Figure3_replay.png",
+      "sha256": "6cbc2c57e5322f8aa38f3ab4fad81c0aa554d3b182bf3e91b45c29acf5dd9a64",
+      "identical_to_prechange": true
+    },
+    {
+      "file": "figures/Figure4_replay.png",
+      "sha256": "7bbea5574f6c827156ea327904362d86de68be9b500fa70bd21f0b7e4ade385e",
+      "identical_to_prechange": true
+    },
+    {
+      "file": "figures/Figure5_adjusted_replay.png",
+      "sha256": "4831f30b3f6d3bc8d0135d1cf3fb4da976fdd63eb7bcce8d514826b566177bd9",
+      "identical_to_prechange": true
+    },
+    {
+      "file": "panels/Figure3A_variance.png",
+      "sha256": "261269fcfa499607ae0e08d1fa3cac9ef39d06d02118cc6c8784e8d478ef2938",
+      "identical_to_prechange": true
+    },
+    {
+      "file": "panels/Figure3B_covariates.png",
+      "sha256": "44cd37e9e716cd602724a835765b5544b4d961b1fee9cfc574f2cf7d3d05653e",
+      "identical_to_prechange": true
+    },
+    {
+      "file": "panels/Figure3C_Factor1.png",
+      "sha256": "4898f5b203319ab021994e02398dc634e7042e7607ac7a8a0b19e0238403e2c5",
+      "identical_to_prechange": true
+    },
+    {
+      "file": "panels/Figure3C_Factor2.png",
+      "sha256": "5e4f5810151385c0b993a223229331b7399e3e20a1b39703f5cb5a2f8ef4a004",
+      "identical_to_prechange": true
+    },
+    {
+      "file": "panels/Figure3C_Factor3.png",
+      "sha256": "ea46b01657f437a0a1f1ac7271722b02d89428332232cee48ee478b216870ab8",
+      "identical_to_prechange": true
+    },
+    {
+      "file": "panels/Figure3C_loadings.png",
+      "sha256": "3e01cdd808e1255ac0153df7f8677f0cdbd6a68fda068e990ae556baf084cc81",
+      "identical_to_prechange": true
+    },
+    {
+      "file": "panels/Figure4D_AUC.png",
+      "sha256": "f54a391f722dea01ef72e8c9026bdb2183cedb668efe6f84b45b1840dd4af074",
+      "identical_to_prechange": true
+    },
+    {
+      "file": "panels/Figure4EF_PCA.png",
+      "sha256": "b182ae4af041bc1158a62cb80ea83cb8fb5b19a643dcec1fe936b248900e4dbb",
+      "identical_to_prechange": true
+    },
+    {
+      "file": "panels/Figure4_RF_lipidomics.png",
+      "sha256": "83b16a17d41b55f38cf025f6a445d8801bb4fdafbd9a3c6808d83ee4bb5d077e",
+      "identical_to_prechange": true
+    },
+    {
+      "file": "panels/Figure4_RF_metabolomics.png",
+      "sha256": "7f984588d95444dc248289d46b6ba499568b7e047be497b9b244386b1675da8c",
+      "identical_to_prechange": true
+    },
+    {
+      "file": "panels/Figure4_RF_proteomics.png",
+      "sha256": "3600cf7af9d6e68cd32891d4f7899084765d18b463cd6177a9d7a247fb82b541",
+      "identical_to_prechange": true
+    },
+    {
+      "file": "supplement/Supplement_heatmap_plot.png",
+      "sha256": "11b750e5fed8bc8533729c5a6d9c4d02859cb09637afb0be254536ba06eb0cd2",
+      "identical_to_prechange": true
+    },
+    {
+      "file": "supplement/Supplement_model_scores_plot.png",
+      "sha256": "15275f4a93dab57324da7223010e50b471ab2a53a92ecff697b258ebf019a220",
+      "identical_to_prechange": true
+    },
+    {
+      "file": "supplement/Supplement_raw_heatmap.png",
+      "sha256": "f046431dcff14a18b8481d95818c6fa94bed60ee3d863761044eaea8ca7208af",
+      "identical_to_prechange": true
+    },
+    {
+      "file": "supplement/Supplement_redundant_factors_plot.png",
+      "sha256": "dbd3a0cdea1abd6aa7322c180f6053cf3e886b41234c131c139daaca4da59ebc",
+      "identical_to_prechange": true
+    },
+    {
+      "file": "supplement/Supplement_total_variance_plot.png",
+      "sha256": "162a5d6b4d3a50274755468a0eebd9465fe71760483438ba51cef92f7d9f0c3c",
+      "identical_to_prechange": true
+    }
+  ]
+}

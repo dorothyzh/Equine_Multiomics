@@ -1,0 +1,39 @@
+cff-version: 1.2.0
+message: "Please cite this software archive when using its code or saved figure data."
+type: software
+title: "Equine Multi-omics Biomarker Discovery"
+version: 1.0.0
+date-released: 2026-10-28
+license: MIT
+repository-code: "https://github.com/dorothyzh/Equine_Multiomics"
+url: "https://github.com/dorothyzh/Equine_Multiomics/releases/tag/v1.0.0"
+abstract: "Code and data for the equine PPID multi-omics study."
+authors:
+  - family-names: "Arad"
+    given-names: "Maor"
+  - family-names: "Frey"
+    given-names: "Connor"
+  - family-names: "Alcazar Magaña"
+    given-names: "Armando"
+  - family-names: "Shi"
+    given-names: "Yuming"
+  - family-names: "Zhong"
+    given-names: "Huan"
+  - family-names: "Rogalski"
+    given-names: "Jason"
+  - family-names: "Hare"
+    given-names: "Rhien"
+  - family-names: "Ku"
+    given-names: "Kenneth"
+  - family-names: "Ghafourifar"
+    given-names: "Golfam"
+  - family-names: "Foster"
+    given-names: "Leonard J."
+keywords:
+  - PPID
+  - equine
+  - multi-omics
+  - proteomics
+  - lipidomics
+  - metabolomics
+  - archived figure data

@@ -1,0 +1,49 @@
+{
+  "title": "Equine Multi-omics Biomarker Discovery",
+  "version": "1.0.0",
+  "upload_type": "software",
+  "description": "Code and data for the equine PPID multi-omics study.",
+  "creators": [
+    {
+      "name": "Arad, Maor"
+    },
+    {
+      "name": "Frey, Connor"
+    },
+    {
+      "name": "Alcazar Magaña, Armando"
+    },
+    {
+      "name": "Shi, Yuming"
+    },
+    {
+      "name": "Zhong, Huan"
+    },
+    {
+      "name": "Rogalski, Jason"
+    },
+    {
+      "name": "Hare, Rhien"
+    },
+    {
+      "name": "Ku, Kenneth"
+    },
+    {
+      "name": "Ghafourifar, Golfam"
+    },
+    {
+      "name": "Foster, Leonard J."
+    }
+  ],
+  "license": "mit",
+  "access_right": "open",
+  "keywords": [
+    "PPID",
+    "equine",
+    "multi-omics",
+    "proteomics",
+    "lipidomics",
+    "metabolomics",
+    "archived figure data"
+  ]
+}
