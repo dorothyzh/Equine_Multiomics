@@ -2,13 +2,13 @@
 
 ## 1. Introduction
 
-Background
+**Background**\
 Pituitary pars intermedia dysfunction (PPID) is a progressive neuroendocrine disorder that primarily affects aged horses, caused by the degeneration of hypothalamic dopaminergic neurons, leading to abnormal pituitary function. Diagnosing PPID is currently hampered by assay variability and the complexity of early-stage presentations.
 
-Results
+**Results**\
 This study presents an unsupervised method of integrating proteomics, lipidomics, and metabolomics to reveal cross-omic trends in PPID, overlooked by traditional analysis methods. Using multi-omics factor analysis, we find trends not seen in the conventional approach, such as divergence of C4BPA with triglycerides in the factor explaining the most lipidomic variance between the control and PPID-diagnosed horses, contradictory to current literary knowledge. Using a random forest classifier, we highlight potential biomarkers for PPID, which can be further explored as potential diagnostic and therapeutic targets.
 
-Conclusions
+**Conclusions**\
 This study demonstrates an integrated and unsupervised multi-omics data analysis of equine PPID, highlighting the importance of complementary sample preparation procedures and statistical analysis methodologies to capture a broader image of the underlying biology. More extensive studies are required to verify these methods as diagnostic tools and validate potential biomarkers observed in the proteomic and lipidomic alterations. 
 
 
