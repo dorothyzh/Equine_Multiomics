@@ -1,5 +1,7 @@
 # Equine Multi-omics Biomarker Discovery
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23754598.svg)](https://doi.org/10.5281/zenodo.23754598)
+
 ## 1. Introduction
 
 This repository contains code and saved results from a study of plasma proteomics, lipidomics and metabolomics in horses with pituitary pars intermedia dysfunction (PPID). The cohort included eight control horses and seven horses with PPID.
@@ -107,7 +109,7 @@ The exporter preserves source feature/sample identifiers and stored row order. I
 
 ## 4. Versioned archive and citation
 
-Version: `v1.0.0`. Code, data and citation metadata are archived through Zenodo.
+Version: [`v1.0.0`](https://github.com/dorothyzh/Equine_Multiomics/releases/tag/v1.0.0). Zenodo DOI: [10.5281/zenodo.23754598](https://doi.org/10.5281/zenodo.23754598).
 
 [Validation results](docs/validation-results.json) · [R environment](docs/unsupervised-sessionInfo.txt)
 

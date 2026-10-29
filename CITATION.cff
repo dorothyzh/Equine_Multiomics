@@ -3,6 +3,7 @@ message: "Please cite this software archive when using its code or saved figure 
 type: software
 title: "Equine Multi-omics Biomarker Discovery"
 version: 1.0.0
+doi: 10.5281/zenodo.23754598
 date-released: 2026-10-28
 license: MIT
 repository-code: "https://github.com/dorothyzh/Equine_Multiomics"
