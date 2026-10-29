@@ -5,37 +5,16 @@ library(readr)
 library(readxl)
 library(dplyr)
 library(tidyverse)
-library(tibble) 
 library(matrixStats) #rowSds
 library(ggplot2)
-library(ggrepel) #label in ggplot figures
-library(ggpubr)
-
 library(missForest) #random forest imputation
 library(doParallel) #parallel computing in random forest
 library(IMIFA) #pareto scaling
 library(factoextra) #pca
-
 library(limma) #limma for differential expression analysis
-library(gprofiler2) #go term analysis
-library(randomForest) #random forest classifier
-library(caret) #machine learning 
-library(MLmetrics) #machine learning 
-
-library(VennDiagram) #venn diagram
 library("RColorBrewer")
 library(ComplexHeatmap) #heatmap
 library(circlize) #colorRamp2 palette
-library(pROC) #ROC
-
-library(mpwR)
-library(vctrs)
-library(fmsb)
-library(gridExtra)
-
-library(DT)
-
-
 
 #data import
 #proteomics
