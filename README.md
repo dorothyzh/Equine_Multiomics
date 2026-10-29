@@ -38,3 +38,8 @@ Preprocessing steps are detailed in line 19-105 of the script.
 |--------|-------------|-------------------|
 | Figure X | <!-- description --> | <!-- e.g. line numbers or section header --> |
 | Figure X | <!-- description --> | <!-- e.g. line numbers or section header --> |
+
+The source code (R scripts) in this repository is released under the
+[MIT License](LICENSE), an OSI-approved open source license.
+The data and metadata are released under
+[CC BY 4.0](data/LICENSE).
